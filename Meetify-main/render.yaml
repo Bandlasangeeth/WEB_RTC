@@ -1,0 +1,39 @@
+services:
+  # ── Backend: Node.js Web Service ─────────────────────────────────────────
+  - type: web
+    name: meetify-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGO_URI
+        # Set this in the Render dashboard → meetify-backend → Environment
+        sync: false
+      - key: CLIENT_URL
+        fromService:
+          name: meetify-frontend
+          type: static
+          property: url
+
+  # ── Frontend: Static Site ─────────────────────────────────────────────────
+  - type: static
+    name: meetify-frontend
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    envVars:
+      - key: REACT_APP_BACKEND_URL
+        # IMPORTANT: Set this manually in the Render dashboard to your backend URL.
+        # Example: https://meetify-backend.onrender.com
+        # Do NOT leave this blank — auth will break if the frontend can't reach the backend.
+        # fromService won't work reliably on first deploy (race condition), so set it manually.
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
